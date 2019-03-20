@@ -20,7 +20,12 @@ func list(w http.ResponseWriter, r *http.Request) {
 	limit, _ := strconv.ParseInt(r.FormValue("limit"), 10, 64)
 	skip, _ := strconv.ParseInt(r.FormValue("skip"), 10, 64)
 
-	items := List(skip, limit)
+	items, err := List(skip, limit)
+
+	if err != nil {
+		w.Write([]byte(err.Error()))
+		return
+	}
 
 	jsonRes, _ := json.Marshal(items)
 	w.Write(jsonRes)

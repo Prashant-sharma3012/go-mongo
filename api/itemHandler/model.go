@@ -17,23 +17,23 @@ var ctx context.Context
 var itemCollection *mongo.Collection
 
 type Item struct {
-	Id              string    `json:"_id"`
-	ItemName        string    `json:"itemName"`
-	CategoryName    string    `json:"categoryName"`
-	SubCategoryName string    `json:"subCategoryName"`
-	ItemDescription string    `json:"itemDescription"`
-	CreatedBy       string    `json:"createdBy`
-	UpdatedAt       time.Time `json:"updatedAt"`
-	CreatedAt       time.Time `json:"createdAt"`
+	Id              string `json:"_id"`
+	ItemName        string `json:"itemName"`
+	CategoryName    string `json:"categoryName"`
+	SubCategoryName string `json:"subCategoryName"`
+	ItemDescription string `json:"itemDescription"`
+	CreatedBy       string `json:"createdBy`
+	UpdatedAt       string `json:"updatedAt"`
+	CreatedAt       string `json:"createdAt"`
 }
 
 func (i *Item) PreSave() {
-	i.UpdatedAt = time.Now()
-	i.CreatedAt = time.Now()
+	i.UpdatedAt = time.Now().String()
+	i.CreatedAt = time.Now().String()
 }
 
 func (i *Item) PreUpdate() {
-	i.UpdatedAt = time.Now()
+	i.UpdatedAt = time.Now().String()
 }
 
 func (i *Item) Save() (*mongo.InsertOneResult, error) {
@@ -88,20 +88,40 @@ func setParams() {
 	itemCollection = db.GetConnection().Collection("item")
 }
 
-func List(skip int64, limit int64) []Item {
+func List(skip int64, limit int64) ([]Item, error) {
 	setParams()
-	itemCur, _ := itemCollection.Find(ctx, bson.M{}, options.Find().SetSkip(skip).SetLimit(limit))
+
+	itemCur, err := itemCollection.Find(ctx, bson.M{}, options.Find().SetSkip(skip).SetLimit(limit))
 	defer itemCur.Close(ctx)
+
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
 
 	var items []Item
 	for itemCur.Next(nil) {
-		item := Item{}
-		err := itemCur.Decode(&item)
+		elem := &bson.D{}
+		err := itemCur.Decode(elem)
 
 		if err != nil {
 			log.Fatal("Decode error ", err)
 		}
+
+		m := elem.Map()
+
+		item := Item{
+			Id:              m["_id"].(primitive.ObjectID).Hex(),
+			ItemName:        m["itemName"].(string),
+			CategoryName:    m["categoryName"].(string),
+			SubCategoryName: m["subCategoryName"].(string),
+			ItemDescription: m["itemDescription"].(string),
+			CreatedBy:       m["createdBy"].(string),
+			UpdatedAt:       m["updatedAt"].(string),
+			CreatedAt:       m["createdAt"].(string),
+		}
+
 		items = append(items, item)
 	}
-	return items
+	return items, nil
 }
