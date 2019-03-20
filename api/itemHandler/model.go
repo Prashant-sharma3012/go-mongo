@@ -2,11 +2,14 @@ package itemHandler
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"time"
 
 	"github.com/tryTwo/db"
+	"github.com/tryTwo/responses"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -34,6 +37,20 @@ func (i *Item) PreSave() {
 
 func (i *Item) PreUpdate() {
 	i.UpdatedAt = time.Now().String()
+}
+
+func ItemFromJson(data io.Reader) *Item {
+	var item *Item
+	json.NewDecoder(data).Decode(&item)
+	return item
+}
+
+func NewItem() *Item {
+	return &Item{}
+}
+
+func (i *Item) Validate() error {
+	return responses.ClientError("Bad Item object")
 }
 
 func (i *Item) Save() (*mongo.InsertOneResult, error) {
