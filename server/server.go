@@ -12,7 +12,6 @@ import (
 )
 
 type Server struct {
-	DBConn *db.DB
 	Routes *mux.Router
 }
 

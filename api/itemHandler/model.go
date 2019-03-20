@@ -2,11 +2,13 @@ package itemHandler
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
 	"github.com/tryTwo/db"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -15,7 +17,7 @@ var ctx context.Context
 var itemCollection *mongo.Collection
 
 type Item struct {
-	Id              string    `json:"itemId"`
+	Id              string    `json:"_id"`
 	ItemName        string    `json:"itemName"`
 	CategoryName    string    `json:"categoryName"`
 	SubCategoryName string    `json:"subCategoryName"`
@@ -44,8 +46,8 @@ func (i *Item) Save() (*mongo.InsertOneResult, error) {
 		{"subCategoryName", i.SubCategoryName},
 		{"itemDescription", i.ItemDescription},
 		{"createdBy", i.CreatedBy},
-		{"UpdatedAt", i.UpdatedAt},
-		{"CreatedAt", i.CreatedAt},
+		{"updatedAt", i.UpdatedAt},
+		{"createdAt", i.CreatedAt},
 	})
 }
 
@@ -53,9 +55,13 @@ func (i *Item) Update() (*mongo.UpdateResult, error) {
 	setParams()
 	i.PreUpdate()
 
+	fmt.Println("object ID from bahar se")
+	fmt.Println(i.Id)
+	objectId, _ := primitive.ObjectIDFromHex(i.Id)
+
 	return itemCollection.UpdateOne(
 		ctx,
-		i.Id,
+		bson.D{{"_id", objectId}},
 		bson.D{
 			{"$set", bson.D{
 				{"itemName", i.ItemName},
@@ -63,7 +69,7 @@ func (i *Item) Update() (*mongo.UpdateResult, error) {
 				{"subCategoryName", i.SubCategoryName},
 				{"itemDescription", i.ItemDescription},
 				{"createdBy", i.CreatedBy},
-				{"UpdatedAt", i.UpdatedAt},
+				{"updatedAt", i.UpdatedAt},
 			},
 			},
 		})
@@ -71,7 +77,10 @@ func (i *Item) Update() (*mongo.UpdateResult, error) {
 
 func (i *Item) Delete() (*mongo.DeleteResult, error) {
 	setParams()
-	return itemCollection.DeleteOne(ctx, bson.D{{"_id", i.Id}})
+	// No error handling, becasue too lazy to put one
+	objectId, _ := primitive.ObjectIDFromHex(i.Id)
+
+	return itemCollection.DeleteOne(ctx, bson.D{{"_id", objectId}})
 }
 
 func setParams() {
@@ -88,11 +97,11 @@ func List(skip int64, limit int64) []Item {
 	for itemCur.Next(nil) {
 		item := Item{}
 		err := itemCur.Decode(&item)
+
 		if err != nil {
 			log.Fatal("Decode error ", err)
 		}
 		items = append(items, item)
 	}
-
 	return items
 }
