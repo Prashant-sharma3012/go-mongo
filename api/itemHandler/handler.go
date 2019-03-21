@@ -2,11 +2,11 @@ package itemHandler
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/tryTwo/utils"
 )
 
 func ItemInit(r *mux.Router) {
@@ -23,6 +23,7 @@ func list(w http.ResponseWriter, r *http.Request) {
 	items, err := List(skip, limit)
 
 	if err != nil {
+		utils.Error(err.Error())
 		w.Write([]byte(err.Error()))
 		return
 	}
@@ -32,37 +33,46 @@ func list(w http.ResponseWriter, r *http.Request) {
 }
 
 func add(w http.ResponseWriter, r *http.Request) {
+	utils.Log("Saving an Item")
+
 	item := ItemFromJson(r.Body)
 	_, err := item.Save()
 
 	if err != nil {
-		fmt.Println(err.Error())
+		utils.Error(err.Error())
 		w.Write([]byte("Something went wrong"))
 	} else {
+		utils.Log("Item Saved Successfully")
 		w.Write([]byte("Item Added Successfully"))
 	}
 }
 
 func update(w http.ResponseWriter, r *http.Request) {
+	utils.Log("Updating an Item")
+
 	item := ItemFromJson(r.Body)
 	_, err := item.Update()
 
 	if err != nil {
-		fmt.Println(err.Error())
+		utils.Error(err.Error())
 		w.Write([]byte("Something went wrong"))
 	} else {
+		utils.Log("Item Updated Successfully")
 		w.Write([]byte("Item Updated Successfully"))
 	}
 }
 
 func delete(w http.ResponseWriter, r *http.Request) {
+	utils.Log("Updating an Item")
+
 	item := ItemFromJson(r.Body)
 	_, err := item.Delete()
 
 	if err != nil {
-		fmt.Println(err.Error())
+		utils.Error(err.Error())
 		w.Write([]byte("Something went wrong"))
 	} else {
+		utils.Log("Item Deleted Successfully")
 		w.Write([]byte("Item Deleted Successfully"))
 	}
 }

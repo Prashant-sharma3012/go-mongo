@@ -9,7 +9,6 @@ type ErrorMessage struct {
 
 func (e *ErrorMessage) Error() string {
 	str, _ := json.Marshal(e)
-
 	return string(str)
 }
 

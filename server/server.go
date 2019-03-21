@@ -1,9 +1,10 @@
 package server
 
 import (
-	"fmt"
 	"net/http"
 	"os"
+
+	"github.com/tryTwo/utils"
 
 	"github.com/gorilla/mux"
 	"github.com/tryTwo/api/itemHandler"
@@ -21,7 +22,7 @@ func BootstrapServer() *Server {
 
 	err := db.Connect()
 	if err != nil {
-		fmt.Println("DB Connect error, Exiting....")
+		utils.Error("DB Connect error, Exiting")
 		os.Exit(1)
 	}
 
