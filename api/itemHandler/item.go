@@ -5,18 +5,23 @@ import (
 	"io"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
+
 	"github.com/tryTwo/responses"
 )
 
 type Item struct {
-	Id              string    `json:"_id"`
-	ItemName        string    `json:"itemName"`
-	CategoryName    string    `json:"categoryName"`
-	SubCategoryName string    `json:"subCategoryName"`
-	ItemDescription string    `json:"itemDescription"`
-	CreatedBy       string    `json:"createdBy`
-	UpdatedAt       time.Time `json:"updatedAt"`
-	CreatedAt       time.Time `json:"createdAt"`
+	ItemId          string    `json:"itemId" bson:"itemId"`
+	ItemName        string    `json:"itemName" bson:"itemName"`
+	CategoryName    string    `json:"categoryName" bson:"categoryName"`
+	SubCategoryName string    `json:"subCategoryName" bson:"subCategoryName"`
+	ItemDescription string    `json:"itemDescription" bson:"itemDescription"`
+	CreatedBy       string    `json:"createdBy" bson:"createdBy"`
+	UpdatedAt       time.Time `json:"updatedAt" bson:"updatedAt"`
+	CreatedAt       time.Time `json:"createdAt" bson:"createdAt"`
+}
+
+type store struct {
 }
 
 func (i *Item) PreSave() {
@@ -34,6 +39,10 @@ func ItemFromJson(data io.Reader) *Item {
 	return item
 }
 
+func ItemToBson(i Item) ([]byte, error) {
+	return bson.Marshal(i)
+}
+
 func NewItem() *Item {
 	return &Item{}
 }
@@ -44,19 +53,20 @@ func (i *Item) Validate() error {
 
 func (i *Item) Save() ([]byte, error) {
 	i.PreSave()
-	return SaveItem(i)
+	item, _ := ItemToBson(*i)
+	return Save(item)
 }
 
-func (i *Item) Update() ([]byte, error) {
+func (i *Item) Update(props []byte) ([]byte, error) {
 	i.PreUpdate()
-	return UpdateItem(i)
+	return Update(props, i)
 }
 
 func (i *Item) Delete() ([]byte, error) {
 	// No error handling, becasue too lazy to put one
-	return DeleteItem(i)
+	return Delete(i)
 }
 
-func List(skip int64, limit int64) ([]Item, error) {
-	return ItemList(skip, limit)
+func ItemList(skip int64, limit int64) ([]Item, error) {
+	return List(skip, limit)
 }

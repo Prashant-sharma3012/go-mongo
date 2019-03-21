@@ -9,7 +9,7 @@ import (
 	"github.com/tryTwo/utils"
 )
 
-func ItemInit(r *mux.Router) {
+func LoadItemHandler(r *mux.Router) {
 	r.HandleFunc("/item", list).Methods("GET")
 	r.HandleFunc("/item", add).Methods("POST")
 	r.HandleFunc("/item", update).Methods("PUT")
@@ -20,7 +20,7 @@ func list(w http.ResponseWriter, r *http.Request) {
 	limit, _ := strconv.ParseInt(r.FormValue("limit"), 10, 64)
 	skip, _ := strconv.ParseInt(r.FormValue("skip"), 10, 64)
 
-	items, err := List(skip, limit)
+	items, err := ItemList(skip, limit)
 
 	if err != nil {
 		utils.Error(err.Error())
@@ -49,9 +49,10 @@ func add(w http.ResponseWriter, r *http.Request) {
 
 func update(w http.ResponseWriter, r *http.Request) {
 	utils.Log("Updating an Item")
+	item := ItemFromJson(r.Body) // this is just to pull itemID
+	props, _ := ItemToBson(*item)
 
-	item := ItemFromJson(r.Body)
-	_, err := item.Update()
+	_, err := item.Update(props)
 
 	if err != nil {
 		utils.Error(err.Error())

@@ -4,12 +4,12 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/tryTwo/db"
 	"github.com/tryTwo/utils"
 
 	"github.com/gorilla/mux"
 	"github.com/tryTwo/api/itemHandler"
 	"github.com/tryTwo/api/vendorHandler"
-	"github.com/tryTwo/db"
 )
 
 type Server struct {
@@ -32,8 +32,10 @@ func BootstrapServer() *Server {
 
 func initRoutes(s *Server) {
 	s.Routes.HandleFunc("/", ping).Methods("GET")
-	itemHandler.ItemInit(s.Routes)
+	itemHandler.LoadItemHandler(s.Routes)
 	vendorHandler.VendorInit(s.Routes)
 }
 
-func ping(w http.ResponseWriter, r *http.Request) {}
+func ping(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Server is up and running"))
+}
