@@ -108,8 +108,8 @@ func ItemList(skip, limit int64) ([]Item, error) {
 			SubCategoryName: m["subCategoryName"].(string),
 			ItemDescription: m["itemDescription"].(string),
 			CreatedBy:       m["createdBy"].(string),
-			UpdatedAt:       m["updatedAt"].(string),
-			CreatedAt:       m["createdAt"].(string),
+			// UpdatedAt:       string(updatedAt),
+			// CreatedAt:       string(createdAt),
 		}
 
 		items = append(items, item)
