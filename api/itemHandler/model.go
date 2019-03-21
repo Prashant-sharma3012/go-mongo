@@ -2,14 +2,11 @@ package itemHandler
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
 	"log"
-	"time"
+	"strconv"
 
 	"github.com/tryTwo/db"
-	"github.com/tryTwo/responses"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -19,45 +16,14 @@ import (
 var ctx context.Context
 var itemCollection *mongo.Collection
 
-type Item struct {
-	Id              string `json:"_id"`
-	ItemName        string `json:"itemName"`
-	CategoryName    string `json:"categoryName"`
-	SubCategoryName string `json:"subCategoryName"`
-	ItemDescription string `json:"itemDescription"`
-	CreatedBy       string `json:"createdBy`
-	UpdatedAt       string `json:"updatedAt"`
-	CreatedAt       string `json:"createdAt"`
+func setParams() {
+	ctx = context.Background()
+	itemCollection = db.GetConnection().Collection("item")
 }
-
-func (i *Item) PreSave() {
-	i.UpdatedAt = time.Now().String()
-	i.CreatedAt = time.Now().String()
-}
-
-func (i *Item) PreUpdate() {
-	i.UpdatedAt = time.Now().String()
-}
-
-func ItemFromJson(data io.Reader) *Item {
-	var item *Item
-	json.NewDecoder(data).Decode(&item)
-	return item
-}
-
-func NewItem() *Item {
-	return &Item{}
-}
-
-func (i *Item) Validate() error {
-	return responses.ClientError("Bad Item object")
-}
-
-func (i *Item) Save() (*mongo.InsertOneResult, error) {
+func SaveItem(i *Item) ([]byte, error) {
 	setParams()
-	i.PreSave()
 
-	return itemCollection.InsertOne(ctx, bson.D{
+	res, err := itemCollection.InsertOne(ctx, bson.D{
 		{"itemName", i.ItemName},
 		{"categoryName", i.CategoryName},
 		{"subCategoryName", i.SubCategoryName},
@@ -66,17 +32,22 @@ func (i *Item) Save() (*mongo.InsertOneResult, error) {
 		{"updatedAt", i.UpdatedAt},
 		{"createdAt", i.CreatedAt},
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	insertedID := res.InsertedID.(primitive.ObjectID).Hex()
+
+	// convert object ID to bytes
+	return []byte(insertedID), nil
 }
 
-func (i *Item) Update() (*mongo.UpdateResult, error) {
+func UpdateItem(i *Item) ([]byte, error) {
 	setParams()
-	i.PreUpdate()
 
-	fmt.Println("object ID from bahar se")
-	fmt.Println(i.Id)
 	objectId, _ := primitive.ObjectIDFromHex(i.Id)
 
-	return itemCollection.UpdateOne(
+	_, err := itemCollection.UpdateOne(
 		ctx,
 		bson.D{{"_id", objectId}},
 		bson.D{
@@ -90,27 +61,31 @@ func (i *Item) Update() (*mongo.UpdateResult, error) {
 			},
 			},
 		})
+	if err != nil {
+		return nil, err
+	}
+
+	return []byte(i.Id + "updated successfully"), nil
 }
 
-func (i *Item) Delete() (*mongo.DeleteResult, error) {
+func DeleteItem(i *Item) ([]byte, error) {
 	setParams()
-	// No error handling, becasue too lazy to put one
 	objectId, _ := primitive.ObjectIDFromHex(i.Id)
 
-	return itemCollection.DeleteOne(ctx, bson.D{{"_id", objectId}})
+	res, err := itemCollection.DeleteOne(ctx, bson.D{{"_id", objectId}})
+	if err != nil {
+		return nil, err
+	}
+
+	return []byte(strconv.Itoa(int(res.DeletedCount))), nil
+
 }
 
-func setParams() {
-	ctx = context.Background()
-	itemCollection = db.GetConnection().Collection("item")
-}
-
-func List(skip int64, limit int64) ([]Item, error) {
+func ItemList(skip, limit int64) ([]Item, error) {
 	setParams()
 
 	itemCur, err := itemCollection.Find(ctx, bson.M{}, options.Find().SetSkip(skip).SetLimit(limit))
 	defer itemCur.Close(ctx)
-
 	if err != nil {
 		fmt.Println(err.Error())
 		return nil, err
@@ -120,7 +95,6 @@ func List(skip int64, limit int64) ([]Item, error) {
 	for itemCur.Next(nil) {
 		elem := &bson.D{}
 		err := itemCur.Decode(elem)
-
 		if err != nil {
 			log.Fatal("Decode error ", err)
 		}
@@ -140,5 +114,6 @@ func List(skip int64, limit int64) ([]Item, error) {
 
 		items = append(items, item)
 	}
+
 	return items, nil
 }
