@@ -9,23 +9,23 @@ import (
 )
 
 type Item struct {
-	Id              string `json:"_id"`
-	ItemName        string `json:"itemName"`
-	CategoryName    string `json:"categoryName"`
-	SubCategoryName string `json:"subCategoryName"`
-	ItemDescription string `json:"itemDescription"`
-	CreatedBy       string `json:"createdBy`
-	UpdatedAt       string `json:"updatedAt"`
-	CreatedAt       string `json:"createdAt"`
+	Id              string    `json:"_id"`
+	ItemName        string    `json:"itemName"`
+	CategoryName    string    `json:"categoryName"`
+	SubCategoryName string    `json:"subCategoryName"`
+	ItemDescription string    `json:"itemDescription"`
+	CreatedBy       string    `json:"createdBy`
+	UpdatedAt       time.Time `json:"updatedAt"`
+	CreatedAt       time.Time `json:"createdAt"`
 }
 
 func (i *Item) PreSave() {
-	i.UpdatedAt = time.Now().String()
-	i.CreatedAt = time.Now().String()
+	i.UpdatedAt = time.Now()
+	i.CreatedAt = time.Now()
 }
 
 func (i *Item) PreUpdate() {
-	i.UpdatedAt = time.Now().String()
+	i.UpdatedAt = time.Now()
 }
 
 func ItemFromJson(data io.Reader) *Item {
