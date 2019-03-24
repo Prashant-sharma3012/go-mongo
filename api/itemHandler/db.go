@@ -16,11 +16,6 @@ import (
 var ctx context.Context
 var itemCollection *mongo.Collection
 
-type toInsert struct {
-	_id primitive.ObjectID
-	doc interface{}
-}
-
 func setParams() {
 	ctx = context.Background()
 	itemCollection = db.GetConnection().Collection("item")
