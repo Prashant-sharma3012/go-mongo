@@ -21,9 +21,6 @@ type Item struct {
 	CreatedAt       time.Time `json:"createdAt" bson:"createdAt"`
 }
 
-type store struct {
-}
-
 func (i *Item) PreSave() {
 	i.UpdatedAt = time.Now()
 	i.CreatedAt = time.Now()
@@ -53,18 +50,17 @@ func (i *Item) Validate() error {
 
 func (i *Item) Save() ([]byte, error) {
 	i.PreSave()
-	item, _ := ItemToBson(*i)
-	return Save(item)
+	return Save(*i)
 }
 
-func (i *Item) Update(props []byte) ([]byte, error) {
+func (i *Item) Update() ([]byte, error) {
 	i.PreUpdate()
-	return Update(props, i)
+	return Update(*i)
 }
 
 func (i *Item) Delete() ([]byte, error) {
 	// No error handling, becasue too lazy to put one
-	return Delete(i)
+	return Delete(*i)
 }
 
 func ItemList(skip int64, limit int64) ([]Item, error) {

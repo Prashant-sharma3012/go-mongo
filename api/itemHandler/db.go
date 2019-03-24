@@ -25,10 +25,10 @@ func setParams() {
 	ctx = context.Background()
 	itemCollection = db.GetConnection().Collection("item")
 }
-func Save(item []byte) ([]byte, error) {
+func Save(i Item) ([]byte, error) {
 	setParams()
 
-	res, err := itemCollection.InsertOne(ctx, bson.Raw(item))
+	res, err := itemCollection.InsertOne(ctx, i)
 	if err != nil {
 		return nil, err
 	}
@@ -36,9 +36,9 @@ func Save(item []byte) ([]byte, error) {
 	return []byte(res.InsertedID.(primitive.ObjectID).Hex()), nil
 }
 
-func Update(props []byte, i *Item) ([]byte, error) {
+func Update(i Item) ([]byte, error) {
 	setParams()
-	_, err := itemCollection.UpdateOne(ctx, bson.D{{"itemId", i.ItemId}}, bson.Raw(props))
+	_, err := itemCollection.UpdateOne(ctx, bson.D{{"itemId", i.ItemId}}, bson.D{{"$set", i}})
 
 	if err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func Update(props []byte, i *Item) ([]byte, error) {
 	return []byte(i.ItemId + "updated successfully"), nil
 }
 
-func Delete(i *Item) ([]byte, error) {
+func Delete(i Item) ([]byte, error) {
 	setParams()
 
 	res, err := itemCollection.DeleteOne(ctx, bson.D{{"itemId", i.ItemId}})

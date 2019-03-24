@@ -50,9 +50,7 @@ func add(w http.ResponseWriter, r *http.Request) {
 func update(w http.ResponseWriter, r *http.Request) {
 	utils.Log("Updating an Item")
 	item := ItemFromJson(r.Body) // this is just to pull itemID
-	props, _ := ItemToBson(*item)
-
-	_, err := item.Update(props)
+	_, err := item.Update()
 
 	if err != nil {
 		utils.Error(err.Error())
